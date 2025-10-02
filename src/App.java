@@ -2,6 +2,11 @@ import java.util.Random;
 
 public class App {
 
+    // flags de controle. se o terrorista plantou a bomba na rodada, true
+    private static boolean bombaPlantada;
+    // se bomba plantada, e bombaDesarmada tb for true, vitoria do policial. se false, vitoria do terrorista
+    private static boolean bombaDesarmada;
+
     public static void main(String[] args) throws Exception {
         // criando os personagens
         Policial policial = new Policial("Cazé", 10, 3, 2); // começa com pistola (2)
@@ -13,11 +18,17 @@ public class App {
 
         // loop do jogo
         while (true) {
+
+            // reset das flags no inicio de cada rodada. iniciam em "false"
+            bombaPlantada = false;
+            bombaDesarmada = false;
+
             // sorteia quem começa a rodada. (0 = policial, 1 = terrorista)
             int primeiro = gerador.nextInt(2);
 
             if (primeiro == 0) {
                 rodadaPolicial(policial, terrorista, gerador);
+                // se o ataque zerou energia do terrorista, termina imediatamente
                 if (terrorista.getEnergia() == 0) {
                     System.out.println("O policial " + policial.getNome() + " venceu!");
                     break;
@@ -42,6 +53,16 @@ public class App {
                 }
             }
 
+            if (bombaPlantada) {
+                if (bombaDesarmada) {
+                    System.out.println("A bomba foi plantada e desarmada nesta rodada. Vitória do Policia!");
+                    break;
+                } else {
+                    System.out.println("A bomba foi plantada e NÃO foi desarmada nessa rodada. Vitória do Terrorista!");
+                    break;
+                }
+
+            }
             // mostrar as energias no fim da rodada
             System.out.println("Energias: " + policial.getNome() + " = " + policial.getEnergia()
                     + " | " + terrorista.getNome() + " = " + terrorista.getEnergia());
@@ -53,7 +74,7 @@ public class App {
         System.out.println("=== FIM ===");
     }
 
-    // Ações do policial
+    // Ações do policial (seleciona aleatoriamente -gerador- e executa)
     private static void rodadaPolicial(Policial p, Terrorista t, Random gerador) {
         // 0 = atacar, 1 = lançar granada, 2 = passar a vez, 3 = desarmar a bomba
         int acao = gerador.nextInt(4);
@@ -69,7 +90,9 @@ public class App {
                 t.setEnergia(p.passarVez(t.getEnergia()));
                 break;
             case 3:
-                p.desarmarBomba(); // sem efeito de energia
+                // desarmar a bomba: marca true para desarme da bomba nesta rodada
+                p.desarmarBomba();
+                bombaDesarmada = true;
                 break;
         }
     }
@@ -90,7 +113,9 @@ public class App {
                 p.setEnergia(t.passarVez(p.getEnergia()));
                 break;
             case 3:
-                t.plantarBomba(); // sem efeito
+                // plantar a bomba: a flag para bombaPlantada é true nessa rodada
+                t.plantarBomba();
+                bombaPlantada = true;
                 break;
         }
     }
